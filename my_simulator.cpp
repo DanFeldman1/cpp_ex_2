@@ -2,10 +2,6 @@
 #include <iostream>
 #include <fstream>
 
-MySimulator::MySimulator() : algo(nullptr), maxSteps(100) { // Example initialization
-    // Initialization code
-}
-
 void MySimulator::readHouseFile(const std::string& houseFilePath) {
     // Read the house file and initialize sensors and other components
     std::ifstream houseFile(houseFilePath);

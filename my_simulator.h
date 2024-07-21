@@ -9,7 +9,6 @@
 
 class MySimulator {
 public:
-    MySimulator();
     void readHouseFile(const std::string& houseFilePath);
     void setAlgorithm(MyAlgorithm& algo);
     void run();
@@ -20,7 +19,7 @@ private:
     MyDirtSensor dirtSensor;
     MyBatteryMeter batteryMeter;
     int maxSteps;
-    // Other private members as needed
+    int maxBattery;
 };
 
 #endif // MY_SIMULATOR_H

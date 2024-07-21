@@ -5,8 +5,9 @@
 
 class MyBatteryMeter : public BatteryMeter {
 public:
-    MyBatteryMeter();
+    MyBatteryMeter(int batteryLevel);
     std::size_t getBatteryState() const override;
+    void decreaseBattery();
 
 private:
     int batteryLevel;
