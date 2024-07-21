@@ -5,7 +5,11 @@
 
 class MyDirtSensor : public DirtSensor {
 public:
+    MyDirtSensor();
     int dirtLevel() const override;
+
+private:
+    // Add any private members or helper functions here
 };
 
 #endif // MY_DIRT_SENSOR_H

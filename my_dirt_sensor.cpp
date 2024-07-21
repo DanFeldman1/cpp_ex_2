@@ -1,7 +1,9 @@
 #include "my_dirt_sensor.h"
 
+MyDirtSensor::MyDirtSensor() {
+    // Initialize the dirt sensor
+}
+
 int MyDirtSensor::dirtLevel() const {
-    // Implement dirt level detection logic
-    // Placeholder implementation
-    return 0;
+    return -1; // Placeholder implementation
 }
