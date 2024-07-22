@@ -2,20 +2,21 @@
 #include <iostream>
 #include <fstream>
 
+MySimulator::MySimulator() {}
+
 void MySimulator::readHouseFile(const std::string& houseFilePath) {
-    // Read the house file and initialize sensors and other components
-    std::ifstream houseFile(houseFilePath);
-    if (!houseFile) {
-        std::cerr << "Error opening house file: " << houseFilePath << std::endl;
+    house = House();
+    if (!house.parseHouseFile(houseFilePath)) {
+        std::cerr << "Error parsing house file: " << houseFilePath << std::endl;
         return;
     }
-    // Process house file contents
-    // ...
+
+    house.printHouse();
 }
 
 void MySimulator::setAlgorithm(MyAlgorithm& algo) {
     this->algo = &algo;
-    algo.setMaxSteps(maxSteps);
+    algo.setMaxSteps(house.getMaxSteps());
     algo.setWallsSensor(wallsSensor);
     algo.setDirtSensor(dirtSensor);
     algo.setBatteryMeter(batteryMeter);
