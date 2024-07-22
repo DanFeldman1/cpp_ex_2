@@ -95,6 +95,7 @@ bool House::parseHouseFile(const std::string& houseFilePath) {
         return false;
     }
 
+    setStartingPosition();
     return true;
 }
 
@@ -110,6 +111,18 @@ bool House::isValidHouse() {
     }
 
     return dockingStationCnt == 1;
+}
+
+void House::setStartingPosition() {
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            if (houseMap[i][j] == 'D') {
+                this->rowPosition = i;
+                this->colPosition = j;
+                return;
+            }
+        }
+    }
 }
 
 void House::printHouse() const {

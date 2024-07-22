@@ -21,6 +21,8 @@ public:
     int getMaxBattery() const { return maxBattery; }
     int getRows() const { return rows; }
     int getCols() const { return cols; }
+    int getRowPosition() const { return rowPosition; }
+    int getColPosition() const { return colPosition; }
     const std::vector<std::vector<char>>& getHouseMap() const { return houseMap; }
 
 private:
@@ -29,6 +31,10 @@ private:
     int rows;
     int cols;
     std::vector<std::vector<char>> houseMap; // 2D vector for house layout
+    int rowPosition;
+    int colPosition;
+
+    void setStartingPosition();
 };
 
 #endif // MY_HOUSE_H

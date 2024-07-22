@@ -3,7 +3,6 @@
 
 #include "enums.h"
 
-
 class WallsSensor {
 public:
 	virtual ~WallsSensor() {}

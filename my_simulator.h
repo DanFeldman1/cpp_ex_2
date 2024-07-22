@@ -18,9 +18,6 @@ public:
 
 private:
     MyAlgorithm* algo;
-    MyWallSensor wallsSensor;
-    MyDirtSensor dirtSensor;
-    MyBatteryMeter batteryMeter;
     House house;
 };
 

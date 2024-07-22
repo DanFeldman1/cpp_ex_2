@@ -2,14 +2,15 @@
 #define MY_DIRT_SENSOR_H
 
 #include "dirt_sensor.h"
+#include "my_house.h"
 
 class MyDirtSensor : public DirtSensor {
 public:
-    MyDirtSensor();
+    MyDirtSensor(House house);
     int dirtLevel() const override;
 
 private:
-    // Add any private members or helper functions here
+    House house;
 };
 
 #endif // MY_DIRT_SENSOR_H

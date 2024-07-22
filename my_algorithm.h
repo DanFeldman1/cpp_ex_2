@@ -20,7 +20,6 @@ private:
     const WallsSensor* wallsSensor;
     const DirtSensor* dirtSensor;
     const BatteryMeter* batteryMeter;
-    // Additional private members as needed
 };
 
 #endif // MY_ALGORITHM_H

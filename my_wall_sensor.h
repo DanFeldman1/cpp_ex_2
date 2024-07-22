@@ -2,14 +2,15 @@
 #define MY_WALL_SENSOR_H
 
 #include "wall_sensor.h"
+#include "my_house.h"
 
 class MyWallSensor : public WallsSensor {
 public:
-    MyWallSensor();
+    MyWallSensor(House house);
     bool isWall(Direction d) const override;
 
 private:
-    // Add any private members or helper functions here
+    House house;
 };
 
 #endif // MY_WALL_SENSOR_H

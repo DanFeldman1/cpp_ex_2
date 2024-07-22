@@ -10,16 +10,14 @@ void MySimulator::readHouseFile(const std::string& houseFilePath) {
         std::cerr << "Error parsing house file: " << houseFilePath << std::endl;
         return;
     }
-
-    house.printHouse();
 }
 
 void MySimulator::setAlgorithm(MyAlgorithm& algo) {
     this->algo = &algo;
     algo.setMaxSteps(house.getMaxSteps());
-    algo.setWallsSensor(wallsSensor);
-    algo.setDirtSensor(dirtSensor);
-    algo.setBatteryMeter(batteryMeter);
+    algo.setWallsSensor(MyWallSensor(house));
+    algo.setDirtSensor(MyDirtSensor(house));
+    algo.setBatteryMeter(MyBatteryMeter(house.getMaxBattery()));
 }
 
 void MySimulator::run() {
