@@ -55,6 +55,12 @@ private:
     Direction convertStepToDirection(Step step);
     void setAllStatesFalse();
 
+    Step handleDockingFinish();
+    Step handleDockingRecharge();
+    Step handleCharging();
+    Step handleWalkingToNextCell();
+    Step handleCleaning();
+
     // Utilzing the sensors
     bool isWall(Step step);
     int getBatteryState();

@@ -128,6 +128,122 @@ void MyAlgorithm::setAllStatesFalse() {
     isThereAPathToNextCell = false;
 }
 
+Step MyAlgorithm::handleDockingFinish() {
+    if (currentPosition == dockingStation) {
+        setAllStatesFalse();
+        return Step::Finish;
+    }
+
+    if (pathToDock.empty()) {
+        pathToDock = bfsToDocking(currentPosition);
+    }
+
+    Step nextStep = pathToDock.front();
+    pathToDock.erase(pathToDock.begin());
+    currentPosition = calcNextCell(currentPosition, nextStep);
+    decreaseBattery();
+    remainingSteps--;
+    return nextStep;
+}
+
+Step MyAlgorithm::handleDockingRecharge() {
+    if (currentPosition == dockingStation) {
+        setAllStatesFalse();
+        charging = true;
+    } 
+    else {
+        if (pathToDock.empty()) {
+            pathToDock = bfsToDocking(currentPosition);
+        }
+
+        Step nextStep = pathToDock.front();
+        pathToDock.erase(pathToDock.begin());
+        currentPosition = calcNextCell(currentPosition, nextStep);
+        decreaseBattery();
+        remainingSteps--;
+        return nextStep;
+    }
+
+    return Step::Stay;
+}
+
+Step MyAlgorithm::handleCharging() {
+    if (getBatteryState() < maxBattery) {
+        chargeBattery();
+        remainingSteps--;
+        return Step::Stay;
+    }
+
+    setAllStatesFalse();
+    isThereAPathToNextCell = true;
+
+    return Step::Stay;
+}
+
+Step MyAlgorithm::handleWalkingToNextCell() {
+    if (pathToNextCell.empty()) {
+        isThereAPathToNextCell = false;
+        int dirtLevel = getDirtLevel();
+
+        // Initializing the area around the cell
+        dynamicMap[currentPosition] = dirtLevel;
+        
+        for (Step d : directions) {
+            Position newPos = calcNextCell(currentPosition, d);
+            if (isWall(d)) {
+                dynamicMap[newPos] = 'W';
+            } else {
+                dynamicMap[newPos] = 'U';
+            }
+        }
+
+        // Check if the cell needs cleaning
+        if (dirtLevel > 0) {
+            cleaning = true;
+        } else {
+            isThereAPathToNextCell = true;
+            // Using BFS generate a path to another cell
+            pathToNextCell = bfs(currentPosition, remainingSteps);
+        }
+    }
+
+    // Peeling the path
+    if (!cleaning) {
+        // Pop the next step from the path
+        Step nextStep = pathToNextCell.front();
+        // Erase the step from the path
+        pathToNextCell.erase(pathToNextCell.begin());
+        // Update the position
+        currentPosition = calcNextCell(currentPosition, nextStep);
+        // Adjust the battery
+        decreaseBattery();
+        // Decrease the remaining steps
+        remainingSteps--;
+        return nextStep;
+    }
+
+    return Step::Stay;
+}
+
+Step MyAlgorithm::handleCleaning() {
+    if (dynamicMap[currentPosition] > '0' && dynamicMap[currentPosition] <= '9') {
+        // Decrease the dirt level
+        dynamicMap[currentPosition]--;
+        // Adjust the battery
+        decreaseBattery();
+        // Decrease the remaining steps
+        remainingSteps--;
+
+        // If after this cleaning, the cell is clean, go to the next cell
+        if (dynamicMap[currentPosition] == 0) {
+            cleaning = false; // Done cleaning this tile
+            isThereAPathToNextCell = true; // Need to find a new path
+        }
+    }
+
+    return Step::Stay;
+}
+
 Step MyAlgorithm::nextStep() {
     try {
         if (!initialized) {
@@ -146,7 +262,7 @@ Step MyAlgorithm::nextStep() {
         }
 
         // Handle returning to the docking station for finishing
-        if (walkToDockWhenFinished) {
+        /*if (walkToDockWhenFinished) {
             if (currentPosition == dockingStation) {
                 setAllStatesFalse();
                 return Step::Finish;
@@ -161,6 +277,9 @@ Step MyAlgorithm::nextStep() {
             decreaseBattery();
             remainingSteps--;
             return nextStep;
+        }*/
+        if (walkToDockWhenFinished) {
+            return handleDockingFinish();
         }
 
         // Check if battery is low and initiate return to docking station if necessary
@@ -170,7 +289,7 @@ Step MyAlgorithm::nextStep() {
         }
 
         // Handle returning to the docking station for recharging
-        if (walkToDockWhenLowBattery) {
+        /*if (walkToDockWhenLowBattery) {
             if (currentPosition == dockingStation) {
                 setAllStatesFalse();
                 charging = true;
@@ -185,10 +304,13 @@ Step MyAlgorithm::nextStep() {
                 remainingSteps--;
                 return nextStep;
             }
+        }*/
+        if (walkToDockWhenLowBattery) {
+            return handleDockingRecharge();
         }
 
         // Handle charging at the docking station
-        if (charging) {
+        /*if (charging) {
             if (getBatteryState() < maxBattery) {
                 chargeBattery();
                 remainingSteps--;
@@ -197,6 +319,9 @@ Step MyAlgorithm::nextStep() {
                 setAllStatesFalse();
                 isThereAPathToNextCell = true;
             }
+        }*/
+        if (charging) {
+            return handleCharging();
         }
 
         // Check if we already have a path to another cell, if not generate one
@@ -207,7 +332,7 @@ Step MyAlgorithm::nextStep() {
         }
 
         // If we have a path to another cell, walk to it
-        if (isThereAPathToNextCell) {
+        /*if (isThereAPathToNextCell) {
             // If we finished to walk to the next cell, 
             // either clean it if necessary, or proceed to the next cell.
             if (pathToNextCell.empty()) {
@@ -251,10 +376,13 @@ Step MyAlgorithm::nextStep() {
 
                 return nextStep;
             }
+        }*/
+        if (isThereAPathToNextCell) {
+            return handleWalkingToNextCell();
         }
 
         // Handle cleaning
-        if (cleaning) {
+        /*if (cleaning) {
             // If the cell is dirty, clean it
             if (dynamicMap[currentPosition] > '0' && dynamicMap[currentPosition] <= '9') {
                 // Decrease the dirt level
@@ -271,6 +399,9 @@ Step MyAlgorithm::nextStep() {
                 }
                 return Step::Stay; // Continue cleaning
             }
+        }*/
+        if (cleaning) {
+            return handleCleaning();
         }
     }
 
