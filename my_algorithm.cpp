@@ -13,8 +13,6 @@ MyAlgorithm::MyAlgorithm() :
     maxBattery(0),
     remainingSteps(0),
     initialized(false),
-    returningToDock(false),
-    backtracking(false),
     cleaning(false),
     charging(false),
     chargingSteps(0),
@@ -50,27 +48,22 @@ void MyAlgorithm::initialize() {
     currentPosition = {0, 0};
     dockingStation = {0, 0};
     // batteryState = maxBattery; 
-    returningToDock = false;
-    backtracking = false;
     cleaning = false;
     charging = false;
-    chargingSteps = 0;
     directions = {Step::North, Step::South, Step::East, Step::West};
     initialized = false;
-    explorationIndex = 0;
-    walls.clear();
+    /*walls.clear();
     notWalls.clear();
 
     for (Step step : directions) {
         if (isWall(step)) {
             walls.push_back(step);
             Position wallPos = calcNextCell(currentPosition, step);
-            visited[wallPos] = -1;
-            tempDict[step] = -1;
+            dynamicMap[wallPos] = 'W';
         } else {
             notWalls.push_back(step);
         }
-    }
+    }*/
 }
 
 bool MyAlgorithm::isWall(Step step) {
@@ -108,22 +101,6 @@ Position MyAlgorithm::calcNextCell(Position current, Step dir) {
         default:
             return current;
     }
-}
-
-Step MyAlgorithm::exploreAndDecide() {
-    while (explorationIndex < notWalls.size()) {
-        Step step = notWalls[explorationIndex];
-        Position newPos = calcNextCell(currentPosition, step);
-        if (visited.find(newPos) == visited.end()) {  // If not already initialized
-            lastExploredDirection = step;
-            backtracking = true;
-            return step;  // Move to this direction to explore
-        }
-        this->tempDict[step] = visited[newPos];
-        explorationIndex++;
-    }
-
-    return argmax(this->tempDict);  // Move to the dirtiest direction
 }
 
 std::vector<Step> MyAlgorithm::findPathToDocking() {
@@ -256,27 +233,11 @@ Step MyAlgorithm::nextStep() {
                 return Step::Stay; // Continue cleaning
             }
         }
+    }
 
-
-
-    } catch (const std::exception& e) {
+    catch (const std::exception& e) {
         std::cerr << "Error in nextStep: " << e.what() << std::endl;
         return Step::Stay; // Default to stay in case of an error
-    }
-}
-
-Step MyAlgorithm::oppositeOf(Step dir) {
-    switch (dir) {
-        case Step::North:
-            return Step::South;
-        case Step::South:
-            return Step::North;
-        case Step::East:
-            return Step::West;
-        case Step::West:
-            return Step::East;
-        default:
-            return Step::Stay;
     }
 }
 
@@ -299,7 +260,7 @@ Direction convertStepToDirection(Step step) {
             return Direction::West;
         default:
             std::cout << "Invalid step" << std::endl;
-            return;
+            return Direction::North;
     }
 }
 
@@ -331,7 +292,7 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
                 pathPos = prev;
             }
             std::reverse(path.begin(), path.end());
-            return path;  // Return the path to the first unexplored or dirty cell
+            return path; // Return the path to the first unexplored or dirty cell
         }
 
         // Explore neighbors (North, South, East, West)

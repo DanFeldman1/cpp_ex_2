@@ -46,11 +46,9 @@ public:
 
 private:
     void initialize();
-    Step exploreAndDecide();
     std::vector<Step> findPathToDocking();
-    // chat calc is short for calculate btw 
+    // chat calc is short for calculate btw
     Position calcNextCell(Position current, Step step);
-    Step oppositeOf(Step step);
     Step argmax(const std::unordered_map<Step, int, StepHash>& dict);
     std::vector<Step> bfs(const Position& start, int maxLength);
     std::vector<Step> bfsToDocking(const Position& start);
@@ -62,9 +60,6 @@ private:
     void chargeBattery();
     int getDirtLevel();
     void decreaseBattery();
-    
-    
-    
     
     Position currentPosition;
     Position dockingStation;
