@@ -130,7 +130,7 @@ void MyAlgorithm::setAllStatesFalse() {
 
 Step MyAlgorithm::handleDockingFinish() {
     if (currentPosition == dockingStation) {
-        setAllStatesFalse();
+        // setAllStatesFalse();
         return Step::Finish;
     }
 
@@ -148,8 +148,7 @@ Step MyAlgorithm::handleDockingFinish() {
 
 Step MyAlgorithm::handleDockingRecharge() {
     if (currentPosition == dockingStation) {
-        setAllStatesFalse();
-        charging = true;
+        return handleCharging();
     } 
     else {
         if (pathToDock.empty()) {
@@ -163,8 +162,6 @@ Step MyAlgorithm::handleDockingRecharge() {
         remainingSteps--;
         return nextStep;
     }
-
-    return Step::Stay;
 }
 
 Step MyAlgorithm::handleCharging() {
@@ -172,17 +169,17 @@ Step MyAlgorithm::handleCharging() {
         chargeBattery();
         remainingSteps--;
         return Step::Stay;
+    } else { 
+        // In case the battery is fully charged
+        return handleWalkingToNextCell();
     }
-
-    setAllStatesFalse();
-    isThereAPathToNextCell = true;
-
-    return Step::Stay;
 }
 
-Step MyAlgorithm::handleWalkingToNextCell() {
+Step MyAlgorithm::handleWalkingToNextCell() { 
+    bool arrived = false;
     if (pathToNextCell.empty()) {
-        isThereAPathToNextCell = false;
+        // isThereAPathToNextCell = false;
+        arrived = true;
         int dirtLevel = getDirtLevel();
 
         // Initializing the area around the cell
@@ -193,22 +190,25 @@ Step MyAlgorithm::handleWalkingToNextCell() {
             if (isWall(d)) {
                 dynamicMap[newPos] = 'W';
             } else {
-                dynamicMap[newPos] = 'U';
+                if (dynamicMap.find(newPos) == dynamicMap.end()) 
+                    dynamicMap[newPos] = 'U';
             }
         }
 
         // Check if the cell needs cleaning
         if (dirtLevel > 0) {
             cleaning = true;
+            return handleCleaning();
         } else {
-            isThereAPathToNextCell = true;
             // Using BFS generate a path to another cell
             pathToNextCell = bfs(currentPosition, remainingSteps);
+            // Start walking to the next cell since there is nothing to clean
+            arrived = false;
         }
     }
 
     // Peeling the path
-    if (!cleaning) {
+    if (!arrived) {
         // Pop the next step from the path
         Step nextStep = pathToNextCell.front();
         // Erase the step from the path
@@ -222,7 +222,6 @@ Step MyAlgorithm::handleWalkingToNextCell() {
         return nextStep;
     }
 
-    return Step::Stay;
 }
 
 Step MyAlgorithm::handleCleaning() {
@@ -239,6 +238,8 @@ Step MyAlgorithm::handleCleaning() {
             cleaning = false; // Done cleaning this tile
             isThereAPathToNextCell = true; // Need to find a new path
         }
+    } else {
+        throw std::runtime_error("Cleaning an Invalid cell");
     }
 
     return Step::Stay;
@@ -257,155 +258,21 @@ Step MyAlgorithm::nextStep() {
         // Ensure we have enough steps to return to the docking station
         if (remainingSteps <= findPathToDocking().size()) {
             // If we're out of steps we finish the algorithm
-            setAllStatesFalse();
-            walkToDockWhenFinished = true;
-        }
-
-        // Handle returning to the docking station for finishing
-        /*if (walkToDockWhenFinished) {
-            if (currentPosition == dockingStation) {
-                setAllStatesFalse();
-                return Step::Finish;
-            }
-            if (pathToDock.empty()) {
-                pathToDock = bfsToDocking(currentPosition);
-            }
-
-            Step nextStep = pathToDock.front();
-            pathToDock.erase(pathToDock.begin());
-            currentPosition = calcNextCell(currentPosition, nextStep);
-            decreaseBattery();
-            remainingSteps--;
-            return nextStep;
-        }*/
-        if (walkToDockWhenFinished) {
             return handleDockingFinish();
         }
 
-        // Check if battery is low and initiate return to docking station if necessary
         if (getBatteryState() <= findPathToDocking().size()) {
-            setAllStatesFalse();
-            walkToDockWhenLowBattery = true;
-        }
 
-        // Handle returning to the docking station for recharging
-        /*if (walkToDockWhenLowBattery) {
-            if (currentPosition == dockingStation) {
-                setAllStatesFalse();
-                charging = true;
-            } else {
-                if (pathToDock.empty()) {
-                    pathToDock = bfsToDocking(currentPosition);
-                }
-                Step nextStep = pathToDock.front();
-                pathToDock.erase(pathToDock.begin());
-                currentPosition = calcNextCell(currentPosition, nextStep);
-                decreaseBattery();
-                remainingSteps--;
-                return nextStep;
-            }
-        }*/
-        if (walkToDockWhenLowBattery) {
             return handleDockingRecharge();
         }
-
-        // Handle charging at the docking station
-        /*if (charging) {
-            if (getBatteryState() < maxBattery) {
-                chargeBattery();
-                remainingSteps--;
-                return Step::Stay;
-            } else {
-                setAllStatesFalse();
-                isThereAPathToNextCell = true;
-            }
-        }*/
-        if (charging) {
-            return handleCharging();
-        }
-
-        // Check if we already have a path to another cell, if not generate one
-        if (!isThereAPathToNextCell) {
-            isThereAPathToNextCell = true;
-            // Using BFS generate a path to another cell
-            pathToNextCell = bfs(currentPosition, remainingSteps);
-        }
-
-        // If we have a path to another cell, walk to it
-        /*if (isThereAPathToNextCell) {
-            // If we finished to walk to the next cell, 
-            // either clean it if necessary, or proceed to the next cell.
-            if (pathToNextCell.empty()) {
-                isThereAPathToNextCell = false;
-                int dirtLevel = getDirtLevel();
-
-                // Initializing the area around the cell
-                dynamicMap[currentPosition] = dirtLevel;
-                
-                for (Step d : directions) {
-                    Position newPos = calcNextCell(currentPosition, d);
-                    if (isWall(d)) {
-                        dynamicMap[newPos] = 'W';
-                    } else {
-                        dynamicMap[newPos] = 'U';
-                    }
-                }
-
-                // Check if the cell needs cleaning
-                if (dirtLevel > 0) {
-                    cleaning = true;
-                    // If the cell is clean already, go to the next one.
-                } else {
-                    isThereAPathToNextCell = true;
-                    // Using BFS generate a path to another cell
-                    pathToNextCell = bfs(currentPosition, remainingSteps);
-                }
-            }
-            // Peeling the path
-            if (!cleaning) {
-                // Pop the next step from the path
-                Step nextStep = pathToNextCell.front();
-                // Erase the step from the path
-                pathToNextCell.erase(pathToNextCell.begin());
-                // Update the position
-                currentPosition = calcNextCell(currentPosition, nextStep);
-                // Adjust the battery
-                decreaseBattery();
-                // Decrease the remaining steps
-                remainingSteps--;
-
-                return nextStep;
-            }
-        }*/
-        if (isThereAPathToNextCell) {
-            return handleWalkingToNextCell();
-        }
-
-        // Handle cleaning
-        /*if (cleaning) {
-            // If the cell is dirty, clean it
-            if (dynamicMap[currentPosition] > '0' && dynamicMap[currentPosition] <= '9') {
-                // Decrease the dirt level
-                dynamicMap[currentPosition]--;
-                // Adjust the battery
-                decreaseBattery();
-                // Decrease the remaining steps
-                remainingSteps--;
-
-                // If after this cleaning, the cell is clean, go to the next cell
-                if (dynamicMap[currentPosition] == 0) {
-                    cleaning = false; // Done cleaning this tile
-                    isThereAPathToNextCell = true; // Need to find a new path
-                }
-                return Step::Stay; // Continue cleaning
-            }
-        }*/
+     
         if (cleaning) {
             return handleCleaning();
         }
-    }
 
-    catch (const std::exception& e) {
+        return handleWalkingToNextCell();
+
+    } catch (const std::exception& e) {
         std::cerr << "Error in nextStep: " << e.what() << std::endl;
         return Step::Stay; // Default to stay in case of an error
     }
