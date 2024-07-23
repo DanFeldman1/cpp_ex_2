@@ -45,7 +45,7 @@ public:
     Step nextStep() override;
 
 private:
-    void initialize();
+    bool initialize();
     std::vector<Step> findPathToDocking();
     // chat calc is short for calculate btw
     Position calcNextCell(Position current, Step step);
@@ -53,6 +53,7 @@ private:
     std::vector<Step> bfs(const Position& start, int maxLength);
     std::vector<Step> bfsToDocking(const Position& start);
     Direction convertStepToDirection(Step step);
+    void setAllStatesFalse();
 
     // Utilzing the sensors
     bool isWall(Step step);
@@ -61,18 +62,23 @@ private:
     int getDirtLevel();
     void decreaseBattery();
     
+    bool initialized;
+
+    // Set the positions
     Position currentPosition;
     Position dockingStation;
+
+    // Parameters
     int maxBattery;
     int remainingSteps;
 
-    bool initialized;
-
-    bool returningToCharge;
-    bool returningToFinish;
-    bool walkingToNextCell;
+    // The different states
     bool cleaning;
     bool charging;
+    bool walkToDockWhenLowBattery;
+    bool walkToDockWhenFinished;
+    bool isThereAPathToNextCell;
+    bool moveToNextCell;
 
     int chargingSteps;
     Step lastExploredDirection;
