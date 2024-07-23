@@ -100,9 +100,9 @@ void MyAlgorithm::decreaseBattery() {
 Position MyAlgorithm::calcNextCell(Position current, Step dir) {
     switch (dir) {
         case Step::North:
-            return {current.x, current.y - 1};
-        case Step::South:
             return {current.x, current.y + 1};
+        case Step::South:
+            return {current.x, current.y - 1};
         case Step::East:
             return {current.x + 1, current.y};
         case Step::West:
@@ -131,7 +131,7 @@ Step MyAlgorithm::exploreAndDecide() {
 }
 
 std::vector<Step> MyAlgorithm::findPathToDocking() {
-    return bfs(currentPosition, dockingStation);
+    return bfsToDocking(currentPosition);
 }
 
 Step MyAlgorithm::nextStep() {
@@ -151,7 +151,7 @@ Step MyAlgorithm::nextStep() {
                 return Step::Finish;
             } else {
                 if (pathToDock.empty()) {
-                    pathToDock = bfs(currentPosition, dockingStation);
+                    pathToDock = bfsToDocking(currentPosition);
                 }
 
                 Step nextStep = pathToDock.front();
@@ -164,7 +164,7 @@ Step MyAlgorithm::nextStep() {
         }
 
         // Check if battery is low and initiate return to docking station if necessary
-        if (getBatteryState() <= static_cast<int>(bfs(currentPosition, dockingStation).size())) {
+        if (getBatteryState() <= static_cast<int>(bfs(currentPosition).size())) {
             returningToDock = true;
             if (cleaning) {
                 interruptedCleaning = true;
@@ -197,7 +197,7 @@ Step MyAlgorithm::nextStep() {
             }
 
             if (pathToDock.empty()) {
-                pathToDock = bfs(currentPosition, dockingStation);
+                pathToDock = bfsToDocking(currentPosition);
             }
 
             Step nextStep = pathToDock.front();
@@ -211,7 +211,7 @@ Step MyAlgorithm::nextStep() {
         // Resume interrupted cleaning
         if (interruptedCleaning) {
             if (interruptedCleaningPath.empty()) {
-                interruptedCleaningPath = bfs(currentPosition, interruptedCleaningPosition);
+                interruptedCleaningPath = bfs(currentPosition);
             }
 
             if (!interruptedCleaningPath.empty()) {
@@ -314,7 +314,58 @@ Direction convertStepToDirection(Step step) {
     }
 }
 
-std::vector<Step> MyAlgorithm::bfs(const Position& start, const Position& goal) {
+std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
+    std::unordered_map<Position, Position, PositionHash> parent;  // To track the path
+    std::unordered_map<Position, int, PositionHash> distance;  // To track the distance from the start
+    std::queue<Position> q;  // Queue for BFS
+    q.push(start);  // Start from the current position
+    parent[start] = start;  // Start has no parent, mark it as its own parent
+    distance[start] = 0;  // Start has distance 0
+
+    while (!q.empty()) {
+        Position current = q.front();
+        q.pop();
+
+        // Check if the current cell is unexplored or dirty
+        char cellStatus = dynamicMap[current];
+
+        if (cellStatus == 'U' || (cellStatus >= '1' && cellStatus <= '9')) {
+            // Construct the path back to the start
+            std::vector<Step> path;
+            Position pathPos = current;
+            while (pathPos != start) {
+                Position prev = parent[pathPos];
+                if (pathPos.x == prev.x + 1) path.push_back(Step::East);
+                else if (pathPos.x == prev.x - 1) path.push_back(Step::West);
+                else if (pathPos.y == prev.y + 1) path.push_back(Step::North);
+                else if (pathPos.y == prev.y - 1) path.push_back(Step::South);
+                pathPos = prev;
+            }
+            std::reverse(path.begin(), path.end());
+            return path;  // Return the path to the first unexplored or dirty cell
+        }
+
+        // Explore neighbors (North, South, East, West)
+        for (Step step : directions) {
+            Position next = calcNextCell(current, step);
+
+            // Continue exploring only if the cell is not a wall and hasn't been visited yet
+            if (dynamicMap.find(next) != dynamicMap.end() && dynamicMap[next] != 'W' && parent.find(next) == parent.end()) {
+                int newDistance = distance[current] + 1;
+
+                if (newDistance <= maxLength) {
+                    parent[next] = current;
+                    distance[next] = newDistance;
+                    q.push(next);
+                }
+            }
+        }
+    }
+
+    return {};  // Return an empty path if no unexplored or dirty cell is found
+}
+
+std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
     std::unordered_map<Position, Position, PositionHash> parent;
     std::queue<Position> q;
     q.push(start);
@@ -324,29 +375,32 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, const Position& goal) 
         Position current = q.front();
         q.pop();
 
-        for (Step step : {Step::North, Step::South, Step::East, Step::West}) {
+        // Check if we've reached the docking station
+        if (current == this->dockingStation) {
+            std::vector<Step> path;
+            Position pathPos = current;
+            while (pathPos != start) {
+                Position prev = parent[pathPos];
+                if (pathPos.x == prev.x + 1) path.push_back(Step::East);
+                else if (pathPos.x == prev.x - 1) path.push_back(Step::West);
+                else if (pathPos.y == prev.y + 1) path.push_back(Step::South);
+                else if (pathPos.y == prev.y - 1) path.push_back(Step::North);
+                pathPos = prev;
+            }
+
+            std::reverse(path.begin(), path.end());
+            return path;
+        }
+
+        for (Step step : directions) {
             Position next = calcNextCell(current, step);
-            if (visited.find(next) != visited.end() && visited[next] != -1 && parent.find(next) == parent.end()) {
+
+            if (dynamicMap.find(next) != dynamicMap.end() && dynamicMap[next] != 'W' && parent.find(next) == parent.end()) {
                 parent[next] = current;
                 q.push(next);
-                if (next == goal) {
-                    std::vector<Step> path;
-                    Position pathPos = next;
-                    while (pathPos != start) {
-                        Position prev = parent[pathPos];
-                        if (pathPos.x == prev.x + 1) path.push_back(Step::East);
-                        else if (pathPos.x == prev.x - 1) path.push_back(Step::West);
-                        else if (pathPos.y == prev.y + 1) path.push_back(Step::North);
-                        else if (pathPos.y == prev.y - 1) path.push_back(Step::South);
-                        pathPos = prev;
-                    }
-                    std::reverse(path.begin(), path.end());
-                    return path;
-                }
             }
         }
     }
 
-    return {}; // No path found
+    return {}; // No path found
 }
-

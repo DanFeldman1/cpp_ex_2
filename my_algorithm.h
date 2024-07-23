@@ -52,7 +52,8 @@ private:
     Position calcNextCell(Position current, Step step);
     Step oppositeOf(Step step);
     Step argmax(const std::unordered_map<Step, int, StepHash>& dict);
-    std::vector<Step> bfs(const Position& start, const Position& goal);
+    std::vector<Step> bfs(const Position& start, int maxLength);
+    std::vector<Step> bfsToDocking(const Position& start);
     Direction convertStepToDirection(Step step);
 
     // Utilzing the sensors
@@ -61,7 +62,7 @@ private:
     void chargeBattery();
     int getDirtLevel();
     void decreaseBattery();
-
+    
     
     
     
@@ -84,7 +85,7 @@ private:
     std::vector<Step> notWalls;
     size_t explorationIndex;
 
-    std::unordered_map<Position, int, PositionHash> visited;
+    std::unordered_map<Position, char, PositionHash> dynamicMap;
     std::unordered_map<Step, int, StepHash> tempDict;
     std::vector<Step> path;
     std::vector<Step> interruptedCleaningPath;

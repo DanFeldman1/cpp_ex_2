@@ -56,7 +56,6 @@ void MySimulator::executeStep(Step step) {
     }
 }
 
-
 void MySimulator::run() {
     if (!algo) {
         std::cerr << "Algorithm not set!" << std::endl;
@@ -68,7 +67,7 @@ void MySimulator::run() {
         steps.push_back(next_step);
         numSteps++;
 
-        if(next_step == Step::Finish) {
+        if (next_step == Step::Finish) {
             status = "Finished";
             break;
         }

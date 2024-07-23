@@ -32,6 +32,7 @@ public:
 
     // return the total dirt left
     int getTotalDirt() const;
+    
 private:
     int maxSteps;
     int maxBattery;
