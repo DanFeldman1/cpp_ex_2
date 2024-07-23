@@ -140,3 +140,17 @@ void House::printHouse() const {
         std::cout << std::endl;
     }
 }
+
+int House::getTotalDirt() const {
+    int totalDirt = 0;
+
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            if (houseMap[i][j] >= '0' && houseMap[i][j] <= '9') {
+                totalDirt += houseMap[i][j] - '0';
+            }
+        }
+    }
+
+    return totalDirt;
+}

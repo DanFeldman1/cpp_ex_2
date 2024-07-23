@@ -25,6 +25,13 @@ public:
     int getColPosition() const { return colPosition; }
     const std::vector<std::vector<char>>& getHouseMap() const { return houseMap; }
 
+    // Setters
+    void setRowPosition(int row) { rowPosition = row; }
+    void setColPosition(int col) { colPosition = col; }
+    void decDirtLevel() { houseMap[rowPosition][colPosition]--; }
+
+    // return the total dirt left
+    int getTotalDirt() const;
 private:
     int maxSteps;
     int maxBattery;

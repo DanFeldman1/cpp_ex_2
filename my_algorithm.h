@@ -2,9 +2,37 @@
 #define MY_ALGORITHM_H
 
 #include "abstract_algorithm.h"
-#include "wall_sensor.h"
-#include "dirt_sensor.h"
-#include "battery_meter.h"
+#include "my_wall_sensor.h"
+#include "my_dirt_sensor.h"
+#include "my_battery_meter.h"
+#include <unordered_map>
+#include <vector>
+#include <memory>
+
+struct Position {
+    int x, y;
+    bool operator==(const Position& other) const {
+        return x == other.x && y == other.y;
+    }
+    bool operator!=(const Position& other) const {
+        return !(*this == other);
+    }
+};
+
+// Custom hash function for Position
+struct PositionHash {
+    std::size_t operator()(const Position& pos) const {
+        return std::hash<int>()(pos.x) ^ std::hash<int>()(pos.y);
+    }
+};
+
+
+// Custom hash function for Step
+struct StepHash {
+    std::size_t operator()(const Step& step) const {
+        return std::hash<int>()(static_cast<int>(step));
+    }
+};
 
 class MyAlgorithm : public AbstractAlgorithm {
 public:
@@ -13,13 +41,60 @@ public:
     void setWallsSensor(const WallsSensor& sensor) override;
     void setDirtSensor(const DirtSensor& sensor) override;
     void setBatteryMeter(const BatteryMeter& meter) override;
+    void setMaxBattery(int maxBattery);
     Step nextStep() override;
 
 private:
-    int maxSteps;
-    const WallsSensor* wallsSensor;
-    const DirtSensor* dirtSensor;
-    const BatteryMeter* batteryMeter;
+    void initialize();
+    Step exploreAndDecide();
+    std::vector<Step> findPathToDocking();
+    // chat calc is short for calculate btw 
+    Position calcNextCell(Position current, Step step);
+    Step oppositeOf(Step step);
+    Step argmax(const std::unordered_map<Step, int, StepHash>& dict);
+    std::vector<Step> bfs(const Position& start, const Position& goal);
+    Direction convertStepToDirection(Step step);
+
+    // Utilzing the sensors
+    bool isWall(Step step);
+    int getBatteryState();
+    void chargeBattery();
+    int getDirtLevel();
+    void decreaseBattery();
+
+    
+    
+    
+    Position currentPosition;
+    Position dockingStation;
+    Position interruptedCleaningPosition;
+    int maxBattery;
+    int remainingSteps;
+    bool initialized;
+    bool returningToDock;
+    bool backtracking;
+    bool cleaning;
+    bool interruptedCleaning;
+    bool charging;
+    int chargingSteps;
+    Step lastExploredDirection;
+    std::vector<Step> pathToDock;
+    std::vector<Step> directions;
+    std::vector<Step> walls;
+    std::vector<Step> notWalls;
+    size_t explorationIndex;
+
+    std::unordered_map<Position, int, PositionHash> visited;
+    std::unordered_map<Step, int, StepHash> tempDict;
+    std::vector<Step> path;
+    std::vector<Step> interruptedCleaningPath;
+    std::vector<Step> cleaningPath;
+    std::vector<Step> chargingPath;
+    std::vector<Step> backtrackingPath;
+
+    std::unique_ptr<MyWallSensor> wallsSensor;
+    std::unique_ptr<MyDirtSensor> dirtSensor;
+    std::unique_ptr<MyBatteryMeter> batteryMeter;
 };
 
 #endif // MY_ALGORITHM_H
