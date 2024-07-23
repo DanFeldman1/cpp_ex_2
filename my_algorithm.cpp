@@ -10,14 +10,12 @@
 MyAlgorithm::MyAlgorithm() : 
     currentPosition({0, 0}),
     dockingStation({0, 0}),
-    interruptedCleaningPosition({-1, -1}),
     maxBattery(0),
     remainingSteps(0),
     initialized(false),
     returningToDock(false),
     backtracking(false),
     cleaning(false),
-    interruptedCleaning(false),
     charging(false),
     chargingSteps(0),
     explorationIndex(0) {}
@@ -51,12 +49,10 @@ void MyAlgorithm::setMaxBattery(int maxBattery) {
 void MyAlgorithm::initialize() {
     currentPosition = {0, 0};
     dockingStation = {0, 0};
-    interruptedCleaningPosition = {-1, -1};
     // batteryState = maxBattery; 
     returningToDock = false;
     backtracking = false;
     cleaning = false;
-    interruptedCleaning = false;
     charging = false;
     chargingSteps = 0;
     directions = {Step::North, Step::South, Step::East, Step::West};
@@ -144,11 +140,40 @@ Step MyAlgorithm::nextStep() {
         // Ensure we have enough steps to return to the docking station
         if (remainingSteps <= findPathToDocking().size()) {
             // If we're out of steps we finish the algorithm
-            returningToDock = true;
+            returningToFinish = true;
             cleaning = false;
-            interruptedCleaning = false;
+        }
+
+        // Handle returning to the docking station for finishing
+        if (returningToFinish) {
             if (currentPosition == dockingStation) {
+                returningToFinish = false;
+                charging = false;
                 return Step::Finish;
+            }
+            if (pathToDock.empty()) {
+                pathToDock = bfsToDocking(currentPosition);
+            }
+
+            Step nextStep = pathToDock.front();
+            pathToDock.erase(pathToDock.begin());
+            currentPosition = calcNextCell(currentPosition, nextStep);
+            decreaseBattery();
+            remainingSteps--;
+            return nextStep;
+        }
+
+        // Check if battery is low and initiate return to docking station if necessary
+        if (getBatteryState() <= findPathToDocking().size()) {
+            returningToCharge = true;
+            cleaning = false;
+        }
+
+        // Handle returning to the docking station for recharging
+        if (returningToCharge) {
+            if (currentPosition == dockingStation) {
+                returningToCharge = false;
+                charging = true;
             } else {
                 if (pathToDock.empty()) {
                     pathToDock = bfsToDocking(currentPosition);
@@ -163,113 +188,77 @@ Step MyAlgorithm::nextStep() {
             }
         }
 
-        // Check if battery is low and initiate return to docking station if necessary
-        if (getBatteryState() <= static_cast<int>(bfs(currentPosition).size())) {
-            returningToDock = true;
-            if (cleaning) {
-                interruptedCleaning = true;
-                interruptedCleaningPosition = currentPosition;
-                cleaning = false;
-            }
-        }
-
         // Handle charging at the docking station
         if (charging) {
-            if (chargingSteps < 20 && getBatteryState() < maxBattery) {
-                chargingSteps++;
+            if (getBatteryState() < maxBattery) {
                 chargeBattery();
                 remainingSteps--;
                 return Step::Stay;
             } else {
                 charging = false;
-                chargingSteps = 0;
-                returningToDock = false;
+                walkingToNextCell = true;
             }
         }
 
-        // Handle returning to the docking station for recharging
-        if (returningToDock) {
-            if (currentPosition == dockingStation) {
-                returningToDock = false;
-                charging = true;
-                chargingSteps = 0;
-                return Step::Stay; // Start charging at docking station
-            }
-
-            if (pathToDock.empty()) {
-                pathToDock = bfsToDocking(currentPosition);
-            }
-
-            Step nextStep = pathToDock.front();
-            pathToDock.erase(pathToDock.begin());
-            currentPosition = calcNextCell(currentPosition, nextStep);
-            decreaseBattery();
-            remainingSteps--;
-            return nextStep;
+        if (!walkingToNextCell) {
+            walkingToNextCell = true;
+            pathToNextCell = bfs(currentPosition, remainingSteps);
         }
 
-        // Resume interrupted cleaning
-        if (interruptedCleaning) {
-            if (interruptedCleaningPath.empty()) {
-                interruptedCleaningPath = bfs(currentPosition);
-            }
+        if (walkingToNextCell) {
+            if (pathToNextCell.empty()) {
+                walkingToNextCell = false;
+                int dirtLevel = getDirtLevel();
 
-            if (!interruptedCleaningPath.empty()) {
-                Step nextStep = interruptedCleaningPath.front();
-                interruptedCleaningPath.erase(interruptedCleaningPath.begin());
+                // Initializing area around cell
+                dynamicMap[currentPosition] = dirtLevel;
+                
+                for (Step d : directions) {
+                    Position newPos = calcNextCell(currentPosition, d);
+
+                    if (isWall(d)) {
+                        dynamicMap[newPos] = 'W';
+                    }
+                    else {
+                        dynamicMap[newPos] = 'U';
+                    }
+                }
+
+                if (dirtLevel > 0) {
+                    cleaning = true;
+                }
+                else {
+                    walkingToNextCell = true;
+                    pathToNextCell = bfs(currentPosition, remainingSteps);
+                }
+            }
+            // Peeling the path
+            if (!cleaning) {
+                Step nextStep = pathToNextCell.front();
+                pathToNextCell.erase(pathToNextCell.begin());
                 currentPosition = calcNextCell(currentPosition, nextStep);
                 decreaseBattery();
                 remainingSteps--;
-                if (interruptedCleaningPath.empty()) {
-                    interruptedCleaning = false;
-                    cleaning = true;
-                }
                 return nextStep;
             }
         }
 
         // Handle cleaning
         if (cleaning) {
-            if (visited[currentPosition] > 0) {
-                visited[currentPosition]--;
+            if (dynamicMap[currentPosition] > 0) {
+                dynamicMap[currentPosition]--;
                 decreaseBattery();
                 remainingSteps--;
-                if (visited[currentPosition] == 0) {
+                if (dynamicMap[currentPosition] == 0) {
                     cleaning = false; // Done cleaning this tile
+                    walkingToNextCell = true;
                 }
                 return Step::Stay; // Continue cleaning
             }
-            cleaning = false; // No more dirt to clean
         }
 
-        // Handle backtracking
-        if (backtracking) {
-            backtracking = false;
-            Step backDirection = oppositeOf(lastExploredDirection);
-            currentPosition = calcNextCell(currentPosition, backDirection);
-            decreaseBattery();
-            remainingSteps--;
-            return backDirection;
-        }
 
-        // Handle exploration and decision making
-        Step choice = exploreAndDecide();
-        Position newPos = calcNextCell(currentPosition, choice);
 
-        // Simulate checking dirt level if moving to a new position
-        if (visited.find(newPos) == visited.end()) {
-            visited[newPos] = getDirtLevel();
-        }
-
-        currentPosition = newPos;
-
-        if (visited[newPos] > 0) {
-            cleaning = true; // Start cleaning if the tile has dirt
-        }
-
-        decreaseBattery();
-        remainingSteps--;
-        return choice;
     } catch (const std::exception& e) {
         std::cerr << "Error in nextStep: " << e.what() << std::endl;
         return Step::Stay; // Default to stay in case of an error

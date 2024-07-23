@@ -68,30 +68,27 @@ private:
     
     Position currentPosition;
     Position dockingStation;
-    Position interruptedCleaningPosition;
     int maxBattery;
     int remainingSteps;
+
     bool initialized;
-    bool returningToDock;
-    bool backtracking;
+
+    bool returningToCharge;
+    bool returningToFinish;
+    bool walkingToNextCell;
     bool cleaning;
-    bool interruptedCleaning;
     bool charging;
+
     int chargingSteps;
     Step lastExploredDirection;
     std::vector<Step> pathToDock;
     std::vector<Step> directions;
     std::vector<Step> walls;
     std::vector<Step> notWalls;
+    std::vector<Step> pathToNextCell;
     size_t explorationIndex;
 
     std::unordered_map<Position, char, PositionHash> dynamicMap;
-    std::unordered_map<Step, int, StepHash> tempDict;
-    std::vector<Step> path;
-    std::vector<Step> interruptedCleaningPath;
-    std::vector<Step> cleaningPath;
-    std::vector<Step> chargingPath;
-    std::vector<Step> backtrackingPath;
 
     std::unique_ptr<MyWallSensor> wallsSensor;
     std::unique_ptr<MyDirtSensor> dirtSensor;
