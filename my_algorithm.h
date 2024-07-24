@@ -52,6 +52,7 @@ private:
     Step argmax(const std::unordered_map<Step, int, StepHash>& dict);
     std::vector<Step> bfs(const Position& start, int maxLength);
     std::vector<Step> bfsToDocking(const Position& start);
+    std::vector<Step> generatePath();
     Direction convertStepToDirection(Step step);
     void setAllStatesFalse();
 
@@ -73,6 +74,7 @@ private:
     // Set the positions
     Position currentPosition;
     Position dockingStation;
+    Position destinationPoint;
 
     // Parameters
     int maxBattery;

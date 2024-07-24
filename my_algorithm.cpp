@@ -73,30 +73,27 @@ bool MyAlgorithm::initialize() {
         }
     }
 
-    if (notWalls.empty()) {
-        return false;
-    }
-    return true;
+    return !notWalls.empty();
 }
 
 bool MyAlgorithm::isWall(Step step) {
-    return this->wallsSensor.get()->isWall(convertStepToDirection(step));
+    return this->wallsSensor->isWall(convertStepToDirection(step));
 } 
 
 int MyAlgorithm::getBatteryState() {
-    return this->batteryMeter.get()->getBatteryState();
+    return this->batteryMeter->getBatteryState();
 }
 
 int MyAlgorithm::getDirtLevel() {
-    return this->dirtSensor.get()->dirtLevel();
+    return this->dirtSensor->dirtLevel();
 }
 
 void MyAlgorithm::chargeBattery() {
-    this->batteryMeter.get()->chargeBattery();
+    this->batteryMeter->chargeBattery();
 }
 
 void MyAlgorithm::decreaseBattery() {
-    this->batteryMeter.get()->decreaseBattery();
+    this->batteryMeter->decreaseBattery();
 }
 
 Position MyAlgorithm::calcNextCell(Position current, Step dir) {
@@ -120,17 +117,8 @@ std::vector<Step> MyAlgorithm::findPathToDocking() {
     return bfsToDocking(currentPosition);
 }
 
-void MyAlgorithm::setAllStatesFalse() {
-    cleaning = false;
-    charging = false;
-    walkToDockWhenFinished = false;
-    walkToDockWhenLowBattery = false;
-    isThereAPathToNextCell = false;
-}
-
 Step MyAlgorithm::handleDockingFinish() {
     if (currentPosition == dockingStation) {
-        // setAllStatesFalse();
         return Step::Finish;
     }
 
@@ -178,7 +166,6 @@ Step MyAlgorithm::handleCharging() {
 Step MyAlgorithm::handleWalkingToNextCell() { 
     bool arrived = false;
     if (pathToNextCell.empty()) {
-        // isThereAPathToNextCell = false;
         arrived = true;
         int dirtLevel = getDirtLevel();
 
@@ -200,24 +187,17 @@ Step MyAlgorithm::handleWalkingToNextCell() {
             cleaning = true;
             return handleCleaning();
         } else {
-            // Using BFS generate a path to another cell
+            // Using BFS generate a path to another cell under the limitation of the remaining steps
             pathToNextCell = bfs(currentPosition, remainingSteps);
-            // Start walking to the next cell since there is nothing to clean
             arrived = false;
         }
     }
 
-    // Peeling the path
     if (!arrived) {
-        // Pop the next step from the path
         Step nextStep = pathToNextCell.front();
-        // Erase the step from the path
         pathToNextCell.erase(pathToNextCell.begin());
-        // Update the position
         currentPosition = calcNextCell(currentPosition, nextStep);
-        // Adjust the battery
         decreaseBattery();
-        // Decrease the remaining steps
         remainingSteps--;
         return nextStep;
     }
@@ -248,8 +228,7 @@ Step MyAlgorithm::handleCleaning() {
 Step MyAlgorithm::nextStep() {
     try {
         if (!initialized) {
-            bool nullCase = initialize();
-            if (!nullCase) {
+            if (!initialize()) {
                 throw std::runtime_error("No paths available from docking station");
             }
             initialized = true;
@@ -317,7 +296,9 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
         char cellStatus = dynamicMap[current];
 
         if (cellStatus == 'U' || (cellStatus >= '1' && cellStatus <= '9')) {
-            // Construct the path back to the start
+
+            destinationPoint = current;  // Set the destination point to the current cell
+
             std::vector<Step> path;
             Position pathPos = current;
             while (pathPos != start) {
@@ -363,7 +344,7 @@ std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
         q.pop();
 
         // Check if we've reached the docking station
-        if (current == this->dockingStation) {
+        if (current == dockingStation) {
             std::vector<Step> path;
             Position pathPos = current;
             while (pathPos != start) {
@@ -390,4 +371,10 @@ std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
     }
 
     return {}; // No path found
+}
+
+
+
+std::vector <Step> MyAlgorithm::generatePath() {
+    
 }
