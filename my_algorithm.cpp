@@ -7,6 +7,7 @@
 #include <queue>
 #include <iostream>
 
+
 MyAlgorithm::MyAlgorithm(): 
     currentPosition({0, 0}),
     dockingStation({0, 0}),
@@ -187,8 +188,22 @@ Step MyAlgorithm::handleWalkingToNextCell() {
             cleaning = true;
             return handleCleaning();
         } else {
+
             // Using BFS generate a path to another cell under the limitation of the remaining steps
-            pathToNextCell = bfs(currentPosition, remainingSteps);
+            pathToNextCell = generatePath();
+
+            if (pathToNextCell.empty()) {
+                // Since no path is found, either there is not enough battery or not enough steps
+                            
+                // If we're out of steps we finish the algorithm
+                if (remainingSteps <= findPathToDocking().size()) 
+                    return handleDockingFinish();
+
+                // If we're out of battery we recharge
+                if (getBatteryState() <= findPathToDocking().size()) 
+                    return handleDockingRecharge();
+            
+            }
             arrived = false;
         }
     }
@@ -297,8 +312,6 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
 
         if (cellStatus == 'U' || (cellStatus >= '1' && cellStatus <= '9')) {
 
-            destinationPoint = current;  // Set the destination point to the current cell
-
             std::vector<Step> path;
             Position pathPos = current;
             while (pathPos != start) {
@@ -319,9 +332,11 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
 
             // Continue exploring only if the cell is not a wall and hasn't been visited yet
             if (dynamicMap.find(next) != dynamicMap.end() && dynamicMap[next] != 'W' && parent.find(next) == parent.end()) {
+                
                 int newDistance = distance[current] + 1;
+                int returnDistance = bfsToDocking(next).size();
 
-                if (newDistance <= maxLength) {
+                if (newDistance + returnDistance <= maxLength) {
                     parent[next] = current;
                     distance[next] = newDistance;
                     q.push(next);
@@ -373,8 +388,7 @@ std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
     return {}; // No path found
 }
 
-
-
-std::vector <Step> MyAlgorithm::generatePath() {
-    
+std::vector<Step> MyAlgorithm::generatePath() {
+    int limit = std::min(remainingSteps, getBatteryState());
+    return bfs(currentPosition, limit);
 }

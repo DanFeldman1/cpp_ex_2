@@ -74,7 +74,6 @@ private:
     // Set the positions
     Position currentPosition;
     Position dockingStation;
-    Position destinationPoint;
 
     // Parameters
     int maxBattery;
