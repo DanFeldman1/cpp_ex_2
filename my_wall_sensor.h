@@ -6,11 +6,11 @@
 
 class MyWallSensor : public WallsSensor {
 public:
-    MyWallSensor(House house);
+    MyWallSensor(House& house);
     bool isWall(Direction d) const override;
 
 private:
-    House house;
+    House& house;
 };
 
 #endif // MY_WALL_SENSOR_H

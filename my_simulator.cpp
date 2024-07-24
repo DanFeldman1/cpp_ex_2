@@ -74,7 +74,6 @@ void MySimulator::run() {
         Step nextStep = algo->nextStep();
         //std::cout << numSteps << " Next step: " << stepToChar(nextStep) << std::endl;
         steps.push_back(nextStep);
-        std::cout << "Step: " << stepToChar(nextStep) << std::endl;
         numSteps++;
 
         if (nextStep == Step::Finish) {
@@ -83,7 +82,6 @@ void MySimulator::run() {
         }
 
         executeStep(nextStep);
-        algo->executeStep(nextStep);
     }
     
     if (numSteps == house.getMaxSteps() && status != "Finished") {

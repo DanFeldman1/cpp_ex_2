@@ -157,7 +157,7 @@ Step MyAlgorithm::handleCharging() {
     }
 }
 
-Step MyAlgorithm::handleWalkingToNextCell() { 
+Step MyAlgorithm::handleWalkingToNextCell() {
     bool arrived = false;
 
     if (pathToNextCell.empty()) {
@@ -230,7 +230,7 @@ Step MyAlgorithm::handleCleaning() {
         remainingSteps--;
 
         // If after this cleaning, the cell is clean, go to the next cell
-        if (dynamicMap[currentPosition] == 0) {
+        if (dynamicMap[currentPosition] == '0') {
             cleaning = false; // Done cleaning this tile
         }
     } else {
@@ -238,28 +238,6 @@ Step MyAlgorithm::handleCleaning() {
     }
 
     return Step::Stay;
-}
-
-void MyAlgorithm::executeStep(Step step) {
-    switch (step) {
-        case Step::North:
-            currentPosition.y++;
-            break;
-        case Step::East:
-            currentPosition.x++;
-            break;
-        case Step::South:
-            currentPosition.y--;
-            break;
-        case Step::West:
-            currentPosition.x--;
-            break;
-        case Step::Stay:
-            break;
-        case Step::Finish:
-            std::cout << "Simulation finished!" << std::endl;
-            break;
-    }
 }
 
 Step MyAlgorithm::nextStep() {

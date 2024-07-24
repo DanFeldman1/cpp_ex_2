@@ -1,7 +1,7 @@
 #include "my_wall_sensor.h"
 #include <vector>
 
-MyWallSensor::MyWallSensor(House house) : house(house) {}
+MyWallSensor::MyWallSensor(House& house) : house(house) {}
 
 bool MyWallSensor::isWall(Direction d) const {
     int rowPos = house.getRowPosition();

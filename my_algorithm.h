@@ -43,7 +43,6 @@ public:
     void setBatteryMeter(const BatteryMeter& meter) override;
     void setMaxBattery(int maxBattery);
     Step nextStep() override;
-    void executeStep(Step step);
 
 private:
     bool initialize();

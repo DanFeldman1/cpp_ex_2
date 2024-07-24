@@ -6,11 +6,11 @@
 
 class MyDirtSensor : public DirtSensor {
 public:
-    MyDirtSensor(House house);
+    MyDirtSensor(House& house);
     int dirtLevel() const override;
 
 private:
-    House house;
+    House& house;
 };
 
 #endif // MY_DIRT_SENSOR_H
