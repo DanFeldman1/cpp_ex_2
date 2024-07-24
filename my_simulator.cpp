@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-MySimulator::MySimulator() : algo(nullptr), numSteps(0), dirtLeft(0), status("WORKING") {}
+MySimulator::MySimulator() : algo(nullptr), numSteps(0), dirtLeft(0), status("") {}
 
 std::size_t MySimulator::getMaxSteps() const {
     return house.getMaxSteps();  // Assuming this method exists in the House class
@@ -71,16 +71,19 @@ void MySimulator::run() {
     }
 
     while (numSteps < house.getMaxSteps()) {
-        Step next_step = algo->nextStep();
-        steps.push_back(next_step);
+        Step nextStep = algo->nextStep();
+        //std::cout << numSteps << " Next step: " << stepToChar(nextStep) << std::endl;
+        steps.push_back(nextStep);
+        std::cout << "Step: " << stepToChar(nextStep) << std::endl;
         numSteps++;
 
-        if (next_step == Step::Finish) {
+        if (nextStep == Step::Finish) {
             status = "Finished";
             break;
         }
 
-        executeStep(next_step);
+        executeStep(nextStep);
+        algo->executeStep(nextStep);
     }
     
     if (numSteps == house.getMaxSteps() && status != "Finished") {

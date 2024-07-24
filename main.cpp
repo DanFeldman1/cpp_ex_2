@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     simulator.readHouseFile(houseFilePath);
     MyAlgorithm algo;
     simulator.setAlgorithm(algo);
-    /*simulator.run();*/
+    simulator.run();
     
     return 0;
 }

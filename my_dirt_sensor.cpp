@@ -1,5 +1,6 @@
 #include "my_dirt_sensor.h"
 #include <vector>
+#include <iostream>
 
 MyDirtSensor::MyDirtSensor(House house) : house(house) {}
 

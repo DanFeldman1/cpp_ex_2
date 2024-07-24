@@ -43,6 +43,7 @@ public:
     void setBatteryMeter(const BatteryMeter& meter) override;
     void setMaxBattery(int maxBattery);
     Step nextStep() override;
+    void executeStep(Step step);
 
 private:
     bool initialize();
@@ -53,7 +54,6 @@ private:
     std::vector<Step> bfsToDocking(const Position& start);
     std::vector<Step> generatePath();
     Direction convertStepToDirection(Step step);
-    void setAllStatesFalse();
 
     Step handleDockingFinish();
     Step handleDockingRecharge();
@@ -68,8 +68,6 @@ private:
     int getDirtLevel();
     void decreaseBattery();
     
-    bool initialized;
-
     // Set the positions
     Position currentPosition;
     Position dockingStation;
@@ -79,12 +77,11 @@ private:
     int remainingSteps;
 
     // The different states
+    bool initialized;
     bool cleaning;
     bool charging;
     bool walkToDockWhenLowBattery;
     bool walkToDockWhenFinished;
-    bool isThereAPathToNextCell;
-    bool moveToNextCell;
 
     std::vector<Step> pathToDock;
     std::vector<Step> directions;

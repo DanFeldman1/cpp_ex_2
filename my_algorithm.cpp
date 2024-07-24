@@ -9,17 +9,15 @@
 
 
 MyAlgorithm::MyAlgorithm():
-    initialized(false),
     currentPosition({0, 0}),
     dockingStation({0, 0}),
     maxBattery(0),
     remainingSteps(0),
+    initialized(false),
     cleaning(false),
     charging(false),
     walkToDockWhenLowBattery(false),
-    walkToDockWhenFinished(false),
-    isThereAPathToNextCell(false),
-    moveToNextCell(false)
+    walkToDockWhenFinished(false)
 {}
 
 void MyAlgorithm::setMaxSteps(std::size_t maxSteps) {
@@ -50,27 +48,16 @@ void MyAlgorithm::setMaxBattery(int maxBattery) {
 
 // Initialize the algorithm, retruns whether the initalization was successful
 bool MyAlgorithm::initialize() {
-    // to check if we have already initialized
-    initialized = false;
-    // Step directions for advancing
     directions = {Step::North, Step::South, Step::East, Step::West};
-    
-    // Initalize the positions
-    currentPosition = {0, 0};
-    dockingStation = {0, 0};
-
-    // The booleans we use to manage the state we're in
-    cleaning = false;
-    charging = false;
-    walkToDockWhenFinished = false;
-    walkToDockWhenLowBattery = false;
-    isThereAPathToNextCell = false;
 
     walls.clear();
     notWalls.clear();
 
+    dynamicMap[dockingStation] = 'D';
+
     for (Step step : directions) {
         Position wallPos = calcNextCell(currentPosition, step);
+
         if (isWall(step)) {
             walls.push_back(step);
             dynamicMap[wallPos] = 'W';
@@ -172,15 +159,19 @@ Step MyAlgorithm::handleCharging() {
 
 Step MyAlgorithm::handleWalkingToNextCell() { 
     bool arrived = false;
+
     if (pathToNextCell.empty()) {
         arrived = true;
         int dirtLevel = getDirtLevel();
 
-        // Initializing the area around the cell
-        dynamicMap[currentPosition] = dirtLevel;
-        
+        // Initializing the cell and the area around the cell
+        if (currentPosition != dockingStation) {
+            dynamicMap[currentPosition] = '0' + dirtLevel;
+        }
+
         for (Step d : directions) {
             Position newPos = calcNextCell(currentPosition, d);
+
             if (isWall(d)) {
                 dynamicMap[newPos] = 'W';
             } else {
@@ -194,7 +185,6 @@ Step MyAlgorithm::handleWalkingToNextCell() {
             cleaning = true;
             return handleCleaning();
         } else {
-
             // Using BFS generate a path to another cell under the limitation of the remaining steps
             pathToNextCell = generatePath();
 
@@ -227,6 +217,10 @@ Step MyAlgorithm::handleWalkingToNextCell() {
 }
 
 Step MyAlgorithm::handleCleaning() {
+    if (dynamicMap.find(currentPosition) == dynamicMap.end()) {
+        throw std::runtime_error("Cleaning an unexplored cell");
+    }
+    
     if (dynamicMap[currentPosition] > '0' && dynamicMap[currentPosition] <= '9') {
         // Decrease the dirt level
         dynamicMap[currentPosition]--;
@@ -238,13 +232,34 @@ Step MyAlgorithm::handleCleaning() {
         // If after this cleaning, the cell is clean, go to the next cell
         if (dynamicMap[currentPosition] == 0) {
             cleaning = false; // Done cleaning this tile
-            isThereAPathToNextCell = true; // Need to find a new path
         }
     } else {
         throw std::runtime_error("Cleaning an Invalid cell");
     }
 
     return Step::Stay;
+}
+
+void MyAlgorithm::executeStep(Step step) {
+    switch (step) {
+        case Step::North:
+            currentPosition.y++;
+            break;
+        case Step::East:
+            currentPosition.x++;
+            break;
+        case Step::South:
+            currentPosition.y--;
+            break;
+        case Step::West:
+            currentPosition.x--;
+            break;
+        case Step::Stay:
+            break;
+        case Step::Finish:
+            std::cout << "Simulation finished!" << std::endl;
+            break;
+    }
 }
 
 Step MyAlgorithm::nextStep() {
@@ -263,14 +278,14 @@ Step MyAlgorithm::nextStep() {
         }
 
         if (getBatteryState() <= int(findPathToDocking().size())) {
-
             return handleDockingRecharge();
         }
-     
+
         if (cleaning) {
             return handleCleaning();
         }
 
+        pathToNextCell.clear();
         return handleWalkingToNextCell();
 
     } catch (const std::exception& e) {
@@ -311,7 +326,6 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
         char cellStatus = dynamicMap[current];
 
         if (cellStatus == 'U' || (cellStatus >= '1' && cellStatus <= '9')) {
-
             std::vector<Step> path;
             Position pathPos = current;
             while (pathPos != start) {
@@ -332,7 +346,6 @@ std::vector<Step> MyAlgorithm::bfs(const Position& start, int maxLength) {
 
             // Continue exploring only if the cell is not a wall and hasn't been visited yet
             if (dynamicMap.find(next) != dynamicMap.end() && dynamicMap[next] != 'W' && parent.find(next) == parent.end()) {
-                
                 int newDistance = distance[current] + 1;
                 int returnDistance = bfsToDocking(next).size();
 
