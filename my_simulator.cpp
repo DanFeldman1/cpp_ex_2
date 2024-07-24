@@ -3,8 +3,11 @@
 #include <fstream>
 #include <sstream>
 
-
 MySimulator::MySimulator() : algo(nullptr), numSteps(0), dirtLeft(0), status("WORKING") {}
+
+std::size_t MySimulator::getMaxSteps() const {
+    return house.getMaxSteps();  // Assuming this method exists in the House class
+}
 
 void MySimulator::readHouseFile(const std::string& houseFilePath) {
     house = House();
@@ -22,35 +25,40 @@ void MySimulator::setAlgorithm(MyAlgorithm& algo) {
     this->algo->setBatteryMeter(MyBatteryMeter(house.getMaxBattery(), house.getMaxBattery()));
 }
 
+char MySimulator::stepToChar(Step step) {
+    switch (step) {
+        case Step::North: return 'N';
+        case Step::East: return 'E';
+        case Step::South: return 'S';
+        case Step::West: return 'W';
+        case Step::Stay: return 's';
+        case Step::Finish: return 'F';
+        default: return ' ';
+    }
+}
+
 void MySimulator::executeStep(Step step) {
-    // The execution of the step
     switch (step) {
         case Step::North:
-            // Move the robot North
             this->house.setColPosition(this->house.getColPosition());
             this->house.setRowPosition(this->house.getRowPosition() - 1);
             break;
         case Step::East:            
-            // Move the robot South
             this->house.setColPosition(this->house.getColPosition() + 1);
             this->house.setRowPosition(this->house.getRowPosition());
             break;
         case Step::South:
-            // Move the robot South
             this->house.setColPosition(this->house.getColPosition());
             this->house.setRowPosition(this->house.getRowPosition() + 1);
             break;
         case Step::West:
-            // Move the robot South
             this->house.setColPosition(this->house.getColPosition() - 1);
             this->house.setRowPosition(this->house.getRowPosition());
             break;
         case Step::Stay:
-            // Clean the current cell
             this->house.decDirtLevel();
             break;    
         case Step::Finish:
-            // Finish the simulation
             std::cout << "Simulation finished!" << std::endl;
             break;
     }
@@ -74,46 +82,32 @@ void MySimulator::run() {
 
         executeStep(next_step);
     }
-
+    
     if (numSteps == house.getMaxSteps() && status != "Finished") {
         status = "Stopped";
     }
 
     dirtLeft = house.getTotalDirt();
 
-    /* 
-    for (int i = 0; i < house.getMaxSteps(); ++i) {
-        Step next_step = algo->nextStep();
-        executeStep(next_step);  // Implement the execute method to handle the step
-    } */
+    writeOutputFile();
 }
 
-void MySimulator::writeOutputFile(const std::string& outputFilePath) {
-    std::ofstream outFile(outputFilePath);
+void MySimulator::writeOutputFile() {
+    std::ofstream outFile("output.txt");
     if (!outFile) {
-        std::cerr << "Could not open output file!" << std::endl;
+        std::cerr << "Could not open output file" << std::endl;
         return;
     }
 
-    outFile << "NumSteps = " << numSteps << "\n";
-    outFile << "DirtLeft = " << dirtLeft << "\n";
-    outFile << "Status = " << status << "\n";
-    outFile << "Steps:\n";
+    outFile << "NumSteps = " << numSteps << std::endl;
+    outFile << "DirtLeft = " << dirtLeft << std::endl;
+    outFile << "Status = " << status << std::endl;
+    outFile << "Steps:" << std::endl;
 
     for (Step step : steps) {
-        switch (step) {
-            case Step::North: outFile << 'N'; break;
-            case Step::East: outFile << 'E'; break;
-            case Step::South: outFile << 'S'; break;
-            case Step::West: outFile << 'W'; break;
-            case Step::Stay: outFile << 's'; break;
-            case Step::Finish: outFile << 'F'; break;
-        }
+        outFile << stepToChar(step);
     }
 
+    outFile << std::endl;
     outFile.close();
-}
-
-std::size_t MySimulator::getMaxSteps() const {
-    return house.getMaxSteps();  // Assuming this method exists in the House class
 }

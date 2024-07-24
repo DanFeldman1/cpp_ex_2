@@ -49,7 +49,6 @@ private:
     std::vector<Step> findPathToDocking();
     // chat calc is short for calculate btw
     Position calcNextCell(Position current, Step step);
-    Step argmax(const std::unordered_map<Step, int, StepHash>& dict);
     std::vector<Step> bfs(const Position& start, int maxLength);
     std::vector<Step> bfsToDocking(const Position& start);
     std::vector<Step> generatePath();
@@ -87,14 +86,11 @@ private:
     bool isThereAPathToNextCell;
     bool moveToNextCell;
 
-    int chargingSteps;
-    Step lastExploredDirection;
     std::vector<Step> pathToDock;
     std::vector<Step> directions;
     std::vector<Step> walls;
     std::vector<Step> notWalls;
     std::vector<Step> pathToNextCell;
-    size_t explorationIndex;
 
     std::unordered_map<Position, char, PositionHash> dynamicMap;
 

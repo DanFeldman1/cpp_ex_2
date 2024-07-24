@@ -18,21 +18,7 @@ int main(int argc, char** argv) {
     simulator.readHouseFile(houseFilePath);
     MyAlgorithm algo;
     simulator.setAlgorithm(algo);
-    simulator.run();
-
-
-
-    // Extract the output file path
-    std::string houseFileName = houseFilePath;
-    size_t lastSlashPos = houseFilePath.find_last_of("/\\");
-    if (lastSlashPos != std::string::npos) {
-        houseFileName = houseFilePath.substr(lastSlashPos + 1);
-    }
-    std::string outputFileName = "output_" + houseFileName;
-
-    // Write the output file
-    simulator.writeOutputFile(outputFileName);
-
+    /*simulator.run();*/
     
     return 0;
 }

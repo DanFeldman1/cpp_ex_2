@@ -8,12 +8,18 @@
 #include <iostream>
 
 
-MyAlgorithm::MyAlgorithm(): 
+MyAlgorithm::MyAlgorithm():
+    initialized(false),
     currentPosition({0, 0}),
     dockingStation({0, 0}),
-    initialized(false),
+    maxBattery(0),
+    remainingSteps(0),
     cleaning(false),
-    charging(false)
+    charging(false),
+    walkToDockWhenLowBattery(false),
+    walkToDockWhenFinished(false),
+    isThereAPathToNextCell(false),
+    moveToNextCell(false)
 {}
 
 void MyAlgorithm::setMaxSteps(std::size_t maxSteps) {
@@ -196,11 +202,11 @@ Step MyAlgorithm::handleWalkingToNextCell() {
                 // Since no path is found, either there is not enough battery or not enough steps
                             
                 // If we're out of steps we finish the algorithm
-                if (remainingSteps <= findPathToDocking().size()) 
+                if (remainingSteps <= int(findPathToDocking().size())) 
                     return handleDockingFinish();
 
                 // If we're out of battery we recharge
-                if (getBatteryState() <= findPathToDocking().size()) 
+                if (getBatteryState() <= int(findPathToDocking().size())) 
                     return handleDockingRecharge();
             
             }
@@ -217,6 +223,7 @@ Step MyAlgorithm::handleWalkingToNextCell() {
         return nextStep;
     }
 
+    return Step::Stay;
 }
 
 Step MyAlgorithm::handleCleaning() {
@@ -250,12 +257,12 @@ Step MyAlgorithm::nextStep() {
         }
 
         // Ensure we have enough steps to return to the docking station
-        if (remainingSteps <= findPathToDocking().size()) {
+        if (remainingSteps <= int(findPathToDocking().size())) {
             // If we're out of steps we finish the algorithm
             return handleDockingFinish();
         }
 
-        if (getBatteryState() <= findPathToDocking().size()) {
+        if (getBatteryState() <= int(findPathToDocking().size())) {
 
             return handleDockingRecharge();
         }
@@ -272,14 +279,7 @@ Step MyAlgorithm::nextStep() {
     }
 }
 
-Step MyAlgorithm::argmax(const std::unordered_map<Step, int, StepHash>& dict) {
-    return std::max_element(dict.begin(), dict.end(),
-                            [](const std::pair<Step, int>& a, const std::pair<Step, int>& b) {
-                                return a.second < b.second;
-                            })->first;
-}
-
-Direction convertStepToDirection(Step step) {
+Direction MyAlgorithm::convertStepToDirection(Step step) {
     switch (step) {
         case Step::North:
             return Direction::North;

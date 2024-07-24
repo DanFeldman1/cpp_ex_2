@@ -8,7 +8,7 @@ public:
     MyBatteryMeter(int batteryLevel, int maxBattery);
     std::size_t getBatteryState() const override { return batteryLevel;};
     std::size_t getMaxBattery() const { return maxBattery;};
-    void decreaseBattery() { batteryLevel--;};
+    void decreaseBattery();
     void chargeBattery();
 
 private:

@@ -57,4 +57,6 @@ bool MyWallSensor::isWall(Direction d) const {
 
         return false;
     }
+
+    return false;
 }

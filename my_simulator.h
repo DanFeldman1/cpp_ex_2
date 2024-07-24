@@ -17,7 +17,6 @@ public:
     void setAlgorithm(MyAlgorithm& algo);
     void run();
     void executeStep(Step step);
-    void writeOutputFile(const std::string& outputFilePath);
     std::size_t getMaxSteps() const; 
 
 private:
@@ -27,6 +26,9 @@ private:
     int dirtLeft;
     std::vector<Step> steps;
     std::string status;
+
+    char stepToChar(Step step);
+    void writeOutputFile();
 };
 
 #endif // MY_SIMULATOR_H
