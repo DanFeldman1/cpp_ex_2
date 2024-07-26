@@ -1,6 +1,9 @@
 #include "my_battery_meter.h"
 
-MyBatteryMeter::MyBatteryMeter(int batteryLevel, int maxBattery) : batteryLevel(batteryLevel), maxBattery(maxBattery) {}
+MyBatteryMeter::MyBatteryMeter(int batteryLevel, int maxBattery) {
+    this->batteryLevel = batteryLevel;
+    this->maxBattery = maxBattery;
+}
 
 void MyBatteryMeter::decreaseBattery() {
     if (batteryLevel > 0) {

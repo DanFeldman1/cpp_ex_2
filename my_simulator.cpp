@@ -5,6 +5,8 @@
 
 MySimulator::MySimulator() : algo(nullptr), numSteps(0), dirtLeft(0), status("") {}
 
+MySimulator::~MySimulator() {}
+
 std::size_t MySimulator::getMaxSteps() const {
     return house.getMaxSteps();  // Assuming this method exists in the House class
 }
@@ -56,8 +58,11 @@ void MySimulator::executeStep(Step step) {
             this->house.setRowPosition(this->house.getRowPosition());
             break;
         case Step::Stay:
-            this->house.decDirtLevel();
-            break;    
+            if (!(this->house.getRowPosition() == this->house.getDockingRowPosition() &&
+                this->house.getColPosition() == this->house.getDockingColPosition())) {
+                this->house.decDirtLevel();
+            }
+            break;
         case Step::Finish:
             std::cout << "Simulation finished!" << std::endl;
             break;
@@ -72,7 +77,8 @@ void MySimulator::run() {
 
     while (numSteps < house.getMaxSteps()) {
         Step nextStep = algo->nextStep();
-        //std::cout << numSteps << " Next step: " << stepToChar(nextStep) << std::endl;
+        std::cout << numSteps << " Next step: " << stepToChar(nextStep) << std::endl;
+        std::cout << "" << std::endl;
         steps.push_back(nextStep);
         numSteps++;
 

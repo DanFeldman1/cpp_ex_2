@@ -23,6 +23,8 @@ public:
     int getCols() const { return cols; }
     int getRowPosition() const { return rowPosition; }
     int getColPosition() const { return colPosition; }
+    int getDockingRowPosition() const { return dockingRowPosition; }
+    int getDockingColPosition() const { return dockingColPosition; }
     const std::vector<std::vector<char>>& getHouseMap() const { return houseMap; }
 
     // Setters
@@ -41,6 +43,8 @@ private:
     std::vector<std::vector<char>> houseMap; // 2D vector for house layout
     int rowPosition;
     int colPosition;
+    int dockingRowPosition;
+    int dockingColPosition;
 
     void setStartingPosition();
 };

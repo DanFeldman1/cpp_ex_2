@@ -1,5 +1,5 @@
 NumSteps = 100
-DirtLeft = 35
-Status = Stopped
+DirtLeft = 24
+Status = Finished
 Steps:
-Ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+SsEssNESsssEsssNWWWsssssssssssssssssssWSEEEEsNESssssNWWWWsssssssssssssssssssSEEEEsEssssssNWWWWWssssF

@@ -41,7 +41,6 @@ public:
     void setWallsSensor(const WallsSensor& sensor) override;
     void setDirtSensor(const DirtSensor& sensor) override;
     void setBatteryMeter(const BatteryMeter& meter) override;
-    void setMaxBattery(int maxBattery);
     Step nextStep() override;
 
 private:
@@ -79,8 +78,6 @@ private:
     bool initialized;
     bool cleaning;
     bool charging;
-    bool walkToDockWhenLowBattery;
-    bool walkToDockWhenFinished;
 
     std::vector<Step> pathToDock;
     std::vector<Step> directions;

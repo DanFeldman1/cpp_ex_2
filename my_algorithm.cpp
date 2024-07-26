@@ -7,7 +7,6 @@
 #include <queue>
 #include <iostream>
 
-
 MyAlgorithm::MyAlgorithm():
     currentPosition({0, 0}),
     dockingStation({0, 0}),
@@ -15,9 +14,7 @@ MyAlgorithm::MyAlgorithm():
     remainingSteps(0),
     initialized(false),
     cleaning(false),
-    charging(false),
-    walkToDockWhenLowBattery(false),
-    walkToDockWhenFinished(false)
+    charging(false)
 {}
 
 void MyAlgorithm::setMaxSteps(std::size_t maxSteps) {
@@ -42,14 +39,10 @@ void MyAlgorithm::setBatteryMeter(const BatteryMeter& meter) {
     this->batteryMeter = std::make_unique<MyBatteryMeter>(myMeter);
 }
 
-void MyAlgorithm::setMaxBattery(int maxBattery) {
-    this->maxBattery = this->batteryMeter.get()->getMaxBattery();
-}
-
-// Initialize the algorithm, retruns whether the initalization was successful
+// Initialize the algorithm, retruns whether or not the initalization was successful
 bool MyAlgorithm::initialize() {
     directions = {Step::North, Step::South, Step::East, Step::West};
-
+    maxBattery = this->batteryMeter.get()->getMaxBattery();
     walls.clear();
     notWalls.clear();
 
@@ -107,13 +100,31 @@ Position MyAlgorithm::calcNextCell(Position current, Step dir) {
     }
 }
 
-std::vector<Step> MyAlgorithm::findPathToDocking() {
-    return bfsToDocking(currentPosition);
-}
-
 Step MyAlgorithm::handleDockingFinish() {
     if (currentPosition == dockingStation) {
         return Step::Finish;
+    }
+
+    if (pathToDock.empty()) {
+        pathToDock = findPathToDocking();
+    }
+
+    Step nextStep = pathToDock.front();
+    pathToDock.erase(pathToDock.begin());
+    currentPosition = calcNextCell(currentPosition, nextStep);
+    decreaseBattery();
+    remainingSteps--;
+    return nextStep;
+}
+
+Step MyAlgorithm::handleDockingRecharge() {
+    if (currentPosition == dockingStation) {
+        charging = true;
+        
+        if (!pathToDock.empty())
+            pathToDock.clear();
+            
+        return handleCharging();
     }
 
     if (pathToDock.empty()) {
@@ -128,24 +139,6 @@ Step MyAlgorithm::handleDockingFinish() {
     return nextStep;
 }
 
-Step MyAlgorithm::handleDockingRecharge() {
-    if (currentPosition == dockingStation) {
-        return handleCharging();
-    } 
-    else {
-        if (pathToDock.empty()) {
-            pathToDock = bfsToDocking(currentPosition);
-        }
-
-        Step nextStep = pathToDock.front();
-        pathToDock.erase(pathToDock.begin());
-        currentPosition = calcNextCell(currentPosition, nextStep);
-        decreaseBattery();
-        remainingSteps--;
-        return nextStep;
-    }
-}
-
 Step MyAlgorithm::handleCharging() {
     if (getBatteryState() < maxBattery) {
         chargeBattery();
@@ -153,6 +146,8 @@ Step MyAlgorithm::handleCharging() {
         return Step::Stay;
     } else { 
         // In case the battery is fully charged
+        charging = false;
+        //std::cout << "Battery is fully charged" << std::endl;
         return handleWalkingToNextCell();
     }
 }
@@ -205,6 +200,9 @@ Step MyAlgorithm::handleWalkingToNextCell() {
     }
 
     if (!arrived) {
+        if (pathToNextCell.empty()) {
+            throw std::runtime_error("Path to next cell is empty");
+        }
         Step nextStep = pathToNextCell.front();
         pathToNextCell.erase(pathToNextCell.begin());
         currentPosition = calcNextCell(currentPosition, nextStep);
@@ -241,6 +239,10 @@ Step MyAlgorithm::handleCleaning() {
 }
 
 Step MyAlgorithm::nextStep() {
+    // std::cout << "Current Position: " << currentPosition.x << "," << currentPosition.y << std::endl;
+    // std::cout << "Dirt Level: " << getDirtLevel() << std::endl;
+    // std::cout << "Battery Level: " << getBatteryState() << std::endl;
+
     try {
         if (!initialized) {
             if (!initialize()) {
@@ -250,20 +252,25 @@ Step MyAlgorithm::nextStep() {
         }
 
         // Ensure we have enough steps to return to the docking station
-        if (remainingSteps <= int(findPathToDocking().size())) {
+        if (remainingSteps <= int(findPathToDocking().size()) + 1) {
             // If we're out of steps we finish the algorithm
+            cleaning = false;
             return handleDockingFinish();
         }
 
-        if (getBatteryState() <= int(findPathToDocking().size())) {
+        if (getBatteryState() <= int(findPathToDocking().size()) + 1) {
+            cleaning = false;
             return handleDockingRecharge();
+        }
+
+        if (charging) {
+            return handleCharging();
         }
 
         if (cleaning) {
             return handleCleaning();
         }
 
-        pathToNextCell.clear();
         return handleWalkingToNextCell();
 
     } catch (const std::exception& e) {
@@ -357,8 +364,8 @@ std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
                 Position prev = parent[pathPos];
                 if (pathPos.x == prev.x + 1) path.push_back(Step::East);
                 else if (pathPos.x == prev.x - 1) path.push_back(Step::West);
-                else if (pathPos.y == prev.y + 1) path.push_back(Step::South);
-                else if (pathPos.y == prev.y - 1) path.push_back(Step::North);
+                else if (pathPos.y == prev.y + 1) path.push_back(Step::North);
+                else if (pathPos.y == prev.y - 1) path.push_back(Step::South);
                 pathPos = prev;
             }
 
@@ -382,4 +389,8 @@ std::vector<Step> MyAlgorithm::bfsToDocking(const Position& start) {
 std::vector<Step> MyAlgorithm::generatePath() {
     int limit = std::min(remainingSteps, getBatteryState());
     return bfs(currentPosition, limit);
+}
+
+std::vector<Step> MyAlgorithm::findPathToDocking() {
+    return bfsToDocking(currentPosition);
 }

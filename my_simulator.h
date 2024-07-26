@@ -12,6 +12,7 @@
 
 class MySimulator {
 public:
+    ~MySimulator();
     MySimulator();
     void readHouseFile(const std::string& houseFilePath);
     void setAlgorithm(MyAlgorithm& algo);

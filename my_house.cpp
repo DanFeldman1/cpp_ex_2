@@ -119,6 +119,8 @@ void House::setStartingPosition() {
             if (houseMap[i][j] == 'D') {
                 this->rowPosition = i;
                 this->colPosition = j;
+                this->dockingRowPosition = i;
+                this->dockingColPosition = j;
                 return;
             }
         }
