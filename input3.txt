@@ -1,0 +1,9 @@
+3-Another Little house
+MaxSteps=80
+MaxBattery = 20
+Rows= 4
+Cols=8
+WWWWWWWWWWWW
+W D W   W 
+W 24 25 2 
+W 24    52
