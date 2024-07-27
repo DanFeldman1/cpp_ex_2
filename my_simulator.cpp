@@ -39,6 +39,11 @@ char MySimulator::stepToChar(Step step) {
     }
 }
 
+bool MySimulator::isOnDocking() {
+    return this->house.getRowPosition() == this->house.getDockingRowPosition() &&
+        this->house.getColPosition() == this->house.getDockingColPosition();
+}
+
 void MySimulator::executeStep(Step step) {
     switch (step) {
         case Step::North:
@@ -58,8 +63,7 @@ void MySimulator::executeStep(Step step) {
             this->house.setRowPosition(this->house.getRowPosition());
             break;
         case Step::Stay:
-            if (!(this->house.getRowPosition() == this->house.getDockingRowPosition() &&
-                this->house.getColPosition() == this->house.getDockingColPosition())) {
+            if (!isOnDocking()) {
                 this->house.decDirtLevel();
             }
             break;
@@ -91,7 +95,11 @@ void MySimulator::run() {
     }
     
     if (numSteps == house.getMaxSteps() && status != "Finished") {
-        status = "Stopped";
+        if (isOnDocking()) {
+            status = "Finished";
+        } else {
+            status = "Stopped";
+        }
     }
 
     dirtLeft = house.getTotalDirt();

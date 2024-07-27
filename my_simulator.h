@@ -18,7 +18,7 @@ public:
     void setAlgorithm(MyAlgorithm& algo);
     void run();
     void executeStep(Step step);
-    std::size_t getMaxSteps() const; 
+    std::size_t getMaxSteps() const;
 
 private:
     MyAlgorithm* algo;
@@ -30,6 +30,7 @@ private:
 
     char stepToChar(Step step);
     void writeOutputFile();
+    bool isOnDocking();
 };
 
 #endif // MY_SIMULATOR_H
