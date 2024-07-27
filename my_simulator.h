@@ -27,6 +27,8 @@ private:
     int dirtLeft;
     std::vector<Step> steps;
     std::string status;
+    std::string outputFileName;
+    std::string inputFileName;
 
     char stepToChar(Step step);
     void writeOutputFile();

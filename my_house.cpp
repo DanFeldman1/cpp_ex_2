@@ -74,7 +74,7 @@ bool House::parseHouseFile(const std::string& houseFilePath) {
             if (rowNum < this->rows) {
                 houseMap[rowNum].resize(this->cols, ' ');
 
-                for (int j = 0; j < this->cols && j < int(line.size()) - 1; ++j) {
+                for (int j = 0; j < this->cols && j < int(line.size()); ++j) {
                     houseMap[rowNum][j] = line[j];
                 }
             }

@@ -17,6 +17,13 @@ void MySimulator::readHouseFile(const std::string& houseFilePath) {
         std::cerr << "Error parsing house file: " << houseFilePath << std::endl;
         return;
     }
+
+    inputFileName = houseFilePath;
+
+    // Generate the output file name according to the guidelines
+    size_t lastSlash = houseFilePath.find_last_of("/");
+    std::string baseName = (lastSlash == std::string::npos) ? houseFilePath : houseFilePath.substr(lastSlash + 1);
+    outputFileName = "output" + baseName;
 }
 
 void MySimulator::setAlgorithm(MyAlgorithm& algo) {
@@ -108,7 +115,7 @@ void MySimulator::run() {
 }
 
 void MySimulator::writeOutputFile() {
-    std::ofstream outFile("output.txt");
+    std::ofstream outFile(outputFileName);
     if (!outFile) {
         std::cerr << "Could not open output file" << std::endl;
         return;
