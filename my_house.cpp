@@ -96,6 +96,7 @@ bool House::parseHouseFile(const std::string& houseFilePath) {
     }
 
     setStartingPosition();
+    printHouse();
     return true;
 }
 

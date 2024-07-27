@@ -184,8 +184,6 @@ Step MyAlgorithm::handleWalkingToNextCell() {
             pathToNextCell = generatePath();
 
             if (pathToNextCell.empty()) {
-                // Since no path is found, either there is not enough battery or not enough steps
-                            
                 // If we're out of steps we finish the algorithm
                 if (remainingSteps <= int(findPathToDocking().size())) 
                     return handleDockingFinish();
@@ -193,7 +191,8 @@ Step MyAlgorithm::handleWalkingToNextCell() {
                 // If we're out of battery we recharge
                 if (getBatteryState() <= int(findPathToDocking().size())) 
                     return handleDockingRecharge();
-            
+
+                return handleDockingFinish();
             }
             arrived = false;
         }
@@ -203,6 +202,7 @@ Step MyAlgorithm::handleWalkingToNextCell() {
         if (pathToNextCell.empty()) {
             throw std::runtime_error("Path to next cell is empty");
         }
+        
         Step nextStep = pathToNextCell.front();
         pathToNextCell.erase(pathToNextCell.begin());
         currentPosition = calcNextCell(currentPosition, nextStep);
