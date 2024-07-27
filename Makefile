@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++14 -Wall -I.
+CXXFLAGS = -std=c++20 -Wall -I.
 
 # Source files
 SOURCES = main.cpp my_algorithm.cpp my_battery_meter.cpp my_dirt_sensor.cpp my_house.cpp my_simulator.cpp my_wall_sensor.cpp
